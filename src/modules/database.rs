@@ -9,7 +9,7 @@ INITIAL SETUP:
 1. Add to mod.rs: pub mod database;
 2. Sign up: https://turso.tech
 3. Create DB: turso db create my-db
-4. Get URL: turso db show my-db
+4. Get URL: turso db show my-db 
 5. Get token: turso db tokens create my-db
 6. Update TURSO_URL and TURSO_AUTH_TOKEN below
 
@@ -116,8 +116,8 @@ fn is_zero(num: &i32) -> bool {
     *num == 0
 }
 
-pub const TURSO_URL: &str = "PUT URL HERE";
-pub const TURSO_AUTH_TOKEN: &str = "PUT IT HERE";
+pub const TURSO_URL: &str = "https://movies-mjv-7.aws-us-east-2.turso.io";
+pub const TURSO_AUTH_TOKEN: &str = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJnaWQiOiJkNzAzMjk0MC04MGEzLTRkNzctYmYwZi0xMjg3MzAzZTg4Y2MiLCJpYXQiOjE3NzU4MzE1MzMsInJpZCI6IjQyNzQwOWVjLWIxYjAtNDRiNS1hYmVjLWQ2MzkzMWZjY2ZmNyJ9.H4prDEtnKNYISDn2boQ06w-Mh1PJonqRn9GUs2WYGMYuwnaCxASiIPqEF3SLadkqiO-rrIIukxpaVo8vt8VRCw";
 
 // ============================================================================
 // CUSTOMIZE THIS STRUCT FOR YOUR DATABASE SCHEMA
