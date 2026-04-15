@@ -31,11 +31,12 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut info_box = MessageBox::info("Information", "Operation completed successfully!");
-    info_box.show();  // Show it immediately or when needed
+    // info_box.show();  // Show it immediately or when needed
 
     let mut client = create_database_client();
     let mut txt_description = TextInput::new(100.0, 400.0, 350.0, 300.0, 25.0);
     txt_description.set_prompt("Enter the description...");
+    txt_description.set_multiline(true);
     let mut txt_id = TextInput::new(450.0, 150.0, 250.0, 60.0, 25.0);
     txt_id.set_prompt("Enter the id...");
     let mut txt_date = TextInput::new(100.0, 300.0, 250.0, 60.0, 25.0);
@@ -46,6 +47,7 @@ async fn main() {
     lbl_display.with_colors(WHITE, Some(DARKGRAY));
     let items = vec!["Item 1".to_string(), "Item 2".to_string()];
     let mut list_view = ListView::new(&items, 800.0, 150.0, 80);
+    list_view.with_max_visible_items(5);
     let btn_add = TextButton::new(100.0, 850.0, 200.0, 60.0, "Add", BLUE, GREEN, 30);
     let btn_delete = TextButton::new(350.0, 850.0, 200.0, 60.0, "Delete", BLUE, GREEN, 30);
     let btn_update = TextButton::new(600.0, 850.0, 200.0, 60.0, "Update", BLUE, GREEN, 30);
@@ -77,10 +79,11 @@ async fn main() {
         lbl_display.draw();
         if btn_add.click() {
             // Insert a record (from user text input)
+            
             let new_record = DatabaseTable {
                 id: 0,
                 title: txt_title.get_text(),
-                year: txt_date.get_text().trim().parse().unwrap(),
+                year: txt_date.get_text().parse::<i32>().unwrap_or(0),
                 description: txt_description.get_text(),
                 
             };
@@ -88,24 +91,32 @@ async fn main() {
                 client = update_listview(&mut list_view, client).await;
                 // Inserted, id contains the new record's id
             } else {
-                
+                // Handle error
             }
         }
         if btn_delete.click() {
 
             // Delete a record by id (from user id input)
-            if let Ok(deleted_count) = client.delete_record_by_id("movies", txt_id.get_text().trim().parse().unwrap()).await {
-                // deleted_count is the number of records deleted
-                client = update_listview(&mut list_view, client).await;
-            } else {
-                // Handle error
+            match txt_id.get_text().trim().parse() {
+                Ok(id) => {
+                    if let Ok(_deleted_count) = client.delete_record_by_id("movies", id).await {
+                        // deleted_count is the number of records deleted
+                        client = update_listview(&mut list_view, client).await;
+                    } else {
+                        // Handle error
+                    }
+                }
+                Err(e) => {
+                    println!("Error parsing id: {}", e);
+                }
             }
+            
             
         }
         if btn_update.click() {
           // Update a record by struct (update all non-id fields)
     let updated_record = DatabaseTable { 
-                id: txt_id.get_text().parse().unwrap(),
+                id: txt_id.get_text().trim().parse().unwrap(),
                 title: txt_title.get_text(),
                 year: txt_date.get_text().trim().parse().unwrap(),
                 description: txt_description.get_text(),};
