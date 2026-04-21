@@ -9,9 +9,9 @@ use crate::modules::database::{DatabaseClient, DatabaseTable, create_database_cl
 use crate::modules::grid::draw_grid;
 use crate::modules::label::Label;
 use crate::modules::listview::ListView;
+use crate::modules::messagebox::MessageBox;
 use crate::modules::text_button::TextButton;
 use crate::modules::text_input::TextInput;
-use crate::modules::messagebox::MessageBox;
 use macroquad::prelude::*;
 
 /// Set up window settings before the app runs
@@ -56,22 +56,22 @@ async fn main() {
     let btn_clear = TextButton::new(150.0, 700.0, 250.0, 60.0, "Clear", BLUE, GREEN, 30);
     list_view.with_colors(BLACK, Some(WHITE), Some(RED));
     async fn update_listview(list_view: &mut ListView, client: DatabaseClient) -> DatabaseClient {
-    list_view.clear();
+        list_view.clear();
 
-    let mut records: Vec<DatabaseTable> = Vec::new();
-    let mut titles: Vec<String> = Vec::new();
-    let matt = client.fetch_table("movies").await;
-    if let Ok(result) = matt {
-        records = result;
-        for record in &records {
-            titles.push(record.id.to_string() + ": " + &record.title.clone());
+        let mut records: Vec<DatabaseTable> = Vec::new();
+        let mut titles: Vec<String> = Vec::new();
+        let matt = client.fetch_table("movies").await;
+        if let Ok(result) = matt {
+            records = result;
+            for record in &records {
+                titles.push(record.id.to_string() + ": " + &record.title.clone());
+            }
+        } else {
+            println!("Error fetching records from database: {} ", matt.err().unwrap());
         }
-    } else {
-        println!("Error fetching records from database: {} ", matt.err().unwrap());
+        list_view.add_items(&titles);
+        client
     }
-    list_view.add_items(&titles);
-    client
-}
 
     client = update_listview(&mut list_view, client).await;
     loop {
@@ -79,15 +79,14 @@ async fn main() {
         lbl_display.draw();
         if btn_add.click() {
             // Insert a record (from user text input)
-            
+
             let new_record = DatabaseTable {
                 id: 0,
                 title: txt_title.get_text(),
                 year: txt_date.get_text().parse::<i32>().unwrap_or(0),
                 description: txt_description.get_text(),
-                
             };
-            if let Ok(id) = client.insert_record("movies", &new_record).await {
+            if let Ok(_id) = client.insert_record("movies", &new_record).await {
                 client = update_listview(&mut list_view, client).await;
                 // Inserted, id contains the new record's id
             } else {
@@ -95,7 +94,6 @@ async fn main() {
             }
         }
         if btn_delete.click() {
-
             // Delete a record by id (from user id input)
             match txt_id.get_text().trim().parse() {
                 Ok(id) => {
@@ -110,22 +108,28 @@ async fn main() {
                     println!("Error parsing id: {}", e);
                 }
             }
-            
-            
         }
         if btn_update.click() {
-          // Update a record by struct (update all non-id fields)
-    let updated_record = DatabaseTable { 
-                id: txt_id.get_text().trim().parse().unwrap(),
-                title: txt_title.get_text(),
-                year: txt_date.get_text().trim().parse().unwrap(),
-                description: txt_description.get_text(),};
-    if let Ok(updated_count) = client.update_record_by_struct("movies", &updated_record).await {
-        // updated_count is the number of records updated
-        client = update_listview(&mut list_view, client).await;
-    } else {
-        // Handle error
-    }  
+            // Update a record by struct (update all non-id fields)
+            let id = txt_id.get_text().trim().parse::<i32>();
+            let year = txt_date.get_text().trim().parse::<i32>();
+
+            if let (Ok(id_parsed), Ok(year_parsed)) = (id, year) {
+                let updated_record = DatabaseTable {
+                    id: id_parsed,
+                    title: txt_title.get_text(),
+                    year: year_parsed,
+                    description: txt_description.get_text(),
+                };
+                if let Ok(_updated_count) = client.update_record_by_struct("movies", &updated_record).await {
+                    // updated_count is the number of records updated
+                    client = update_listview(&mut list_view, client).await;
+                } else {
+                    // Handle error
+                }
+            } else{
+                println!("Error parsing id or year");
+            }
         }
         if btn_search.click() {
             let id = txt_id.get_text().parse().unwrap();
